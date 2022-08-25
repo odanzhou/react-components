@@ -19,7 +19,7 @@ const useParams = (initParams = InitObj) => {
   }, [])
 
   const onSearch = useCallback(() => {
-    setParams(dataRef.current)
+    setParams({...dataRef.current})
   }, [dataRef])
 
   return {
