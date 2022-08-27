@@ -1,0 +1,242 @@
+.banner {
+  width: 100%;
+  height: calc(100vh - 80px);
+  position: relative;
+
+  @media screen and (max-width: 768px) {
+    height: calc(100vh - 60px);
+  }
+
+  &.bannerInApp {
+    @media screen and (max-width: 768px) {
+      height: 100vh;
+    }
+  }
+}
+
+.mediaContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: calc(100vh - 80px);
+  z-index: 0;
+
+  @media screen and (max-width: 768px) {
+    height: calc(100vh - 60px);
+  }
+
+  &.mediaContainerInApp {
+    @media screen and (max-width: 768px) {
+      height: 100vh;
+    }
+  }
+}
+
+.media {
+  width: 100%;
+  height: 100%;
+}
+
+.mediaCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+
+.infoContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 5;
+  transform: translate(-50%, -50%);
+
+  @media screen and (min-width: 769px) {
+    max-width: 1200px;
+  }
+
+  @media screen and (max-width: 768px) {
+    max-width: 80vw;
+  }
+
+  .infoTitle {
+    font-weight: 600;
+    font-size: 56px;
+    color: white;
+    text-align: center;
+    word-break: break-all;
+    @media screen and (max-width: 768px) {
+      font-size: 28px;
+      line-height: 130%;
+    }
+  }
+
+  .infoDesc {
+    font-weight: 400;
+    font-size: 28px;
+    line-height: 130%;
+    height: 80px;
+    margin-top: 16px;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+    -webkit-box-orient: vertical;
+    width: max-content;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    display: -webkit-box;
+    color: rgba(225, 232, 245, 0.6);
+
+    @media screen and (min-width: 769px) {
+      max-width: 1200px;
+    }
+
+    @media screen and (max-width: 768px) {
+      max-width: 80vw;
+      font-size: 14px;
+      line-height: 150%;
+      -webkit-line-clamp: 3;
+      line-clamp: 3;
+      color: rgba(225, 232, 245);
+    }
+  }
+
+  .buttonContainer {
+    display: flex;
+    justify-content: center;
+    margin-top: 32px;
+
+    @media screen and (max-width: 768px) {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    a:focus {
+      text-decoration: none;
+    }
+
+    .button {
+      box-sizing: border-box;
+      width: 263px;
+      height: 62px;
+      border-radius: 33px;
+      border-color: transparent;
+      font-size: 20px;
+      font-weight: 600;
+      text-transform: uppercase;
+      word-break: break-all;
+      @media screen and (max-width: 768px) {
+        width: 70vw;
+        font-size: 16px;
+      }
+
+      transition: all 0.2s ease;
+
+      &:hover {
+        transition: all 0.2s ease;
+        transform: translateY(-5px);
+      }
+    }
+
+    .firstButton {
+      &:hover {
+        box-shadow: 0 0 20px 10px rgba(128, 220, 17, 0.2);
+      }
+
+      color: #000;
+      background-color: rgb(128, 220, 17);
+    }
+
+    .secondButton {
+      color: #fff;
+      border-color: white;
+      margin-left: 20px;
+
+      @media screen and (max-width: 768px) {
+        margin-left: 0;
+        margin-top: 16px;
+      }
+
+      &:hover {
+        background-color: transparent;
+      }
+    }
+  }
+
+  .timeContainer {
+    display: flex;
+    justify-content: center;
+    margin-top: 32px;
+
+    .timeItem {
+      text-align: center;
+      color: #FFFFFF;
+
+      .time {
+        font-weight: 500;
+        font-size: 24px;
+        background: rgba(188, 200, 224, 0.12);
+        border-radius: 8px;
+        width: 48px;
+        height: 48px;
+        line-height: 48px;
+      }
+
+      .timeTip {
+        font-weight: 400;
+        font-size: 10px;
+        line-height: 16px;
+        height: 22px;
+      }
+    }
+  }
+
+  .timeContainerPlace {
+    height: 70px;
+    margin-top: 32px;
+  }
+}
+
+@keyframes bounce {
+  0% {
+    transform: translateY(10px);
+  }
+
+  50% {
+    transform: translateY(15px);
+  }
+
+  100% {
+    transform: translateY(10px);
+  }
+}
+
+.mouseNoteContainer {
+  position: absolute;
+  bottom: 50px;
+  left: 50%;
+  width: 40px;
+  height: 56px;
+  border-radius: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+
+  @media screen and (max-width: 768px) {
+    bottom: 40px;
+  }
+
+  .mouseLine {
+    width: 2px;
+    height: 14px;
+    border-radius: 2px;
+    background: #80DC11;
+    animation: bounce 1.5s infinite;
+  }
+}
