@@ -3,6 +3,7 @@ import { useMemo, useRef, useCallback, forwardRef } from 'react'
 import { useSelector } from 'dva'
 import { flatMap } from 'lodash'
 import { Select } from 'antd'
+import { _t } from 'utils/i18n';
 import { WrappedFormUtils } from 'antd/lib/form/Form'
 import { useNewRef } from 'src/hooks'
 import { valIsEmpty } from 'utils/utils'
@@ -117,8 +118,9 @@ const useLangForm = (list, conf) => {
             if(val) {
               msg = msg.filter(lang => !val[lang])
             }
+            const requiredMsg = _t('admin.trade.common.required.name')
             if(msg.length) {
-              throw new Error( showLang ? msg.map(lang => `${getLangVal(lang)}必填`).join('; ') : `${others.label || ''}必填`);
+              throw new Error( showLang ? msg.map(lang => `${getLangVal(lang)}${requiredMsg}`).join('; ') : `${others.label || ''}${requiredMsg}`);
             }
           }
         })
@@ -186,7 +188,7 @@ const useLangForm = (list, conf) => {
         return langTextItem
       }
       Object.assign(langTextItem, {
-        wrapperCol: { offset: labelColSpan, ...langConf?.wrapperCol },
+        wrapperCol: { offset: langTextItem.labelCol?.span || labelColSpan, ...langConf?.wrapperCol },
       })
       // 语言有label，文本没label
       delete langTextItem.label
