@@ -4,6 +4,8 @@ import { useParams } from 'hooks'
 import { _t } from 'utils/i18n';
 import KForm from 'src/KComponents/KForm'
 
+export const DataQueryKey = '__query'
+
 /**
  * 展示数据查询结果
  * @param {{
@@ -50,7 +52,7 @@ const DataQuery = (props) => {
         },
       ]
     }
-    return listData
+    return typeof listData === 'function' ? listData(form, conf, ...args) : listData
   }, [list, paramsKey, showBtn, isFormat, useFormateBtn, loading])
 
   const formProps = useMemo(() => {
@@ -70,9 +72,11 @@ const DataQuery = (props) => {
 
   const childrenContent = useMemo(() => {
     const conf = {
-      params: searchParams,
-      onOk: onResetSeach,
-      isFormat
+      [DataQueryKey]: {
+        params: searchParams,
+        onOk: onResetSeach,
+        isFormat
+      }
     }
     return typeof children === 'function' ? children(conf) : React.cloneElement(children, conf)
   }, [children, searchParams, onResetSeach, isFormat])
