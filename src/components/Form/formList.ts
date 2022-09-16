@@ -1,5 +1,7 @@
 import React, { memo, useMemo } from 'react'
 import { Form, Row, Spin  } from 'antd'
+import cls from 'classnames';
+import styles from './styles/index.less'
 import { DefLabelColSpan, DefLoading, DefUseRow } from './constants'
 
 /**
@@ -12,12 +14,13 @@ import { DefLabelColSpan, DefLoading, DefUseRow } from './constants'
  *  formItems?: React.ReactNode,
  *  formProps?: FormProps,
  *  labelColSpan?: number,
- *  wrapperColSpan?: number
+ *  wrapperColSpan?: number,
+ *  compact?: boolean,
  * }} props 
  */
 const FormList = (props) => {
   const { useRow = DefUseRow, rowProps, loading = DefLoading, footerContent,
-    formItems, formProps, labelColSpan = DefLabelColSpan, wrapperColSpan
+    formItems, formProps, labelColSpan = DefLabelColSpan, wrapperColSpan, compact,
   } = props
 
   const spinObj = useMemo(() => {
@@ -26,12 +29,14 @@ const FormList = (props) => {
 
   return (
     <Spin {...spinObj}>
-      <Form labelCol={{ span: labelColSpan }} wrapperCol={{ span: wrapperColSpan || 24 - labelColSpan }} {...formProps}>
-        {
-          useRow ? <Row gutter={24} {...rowProps}>{formItems}</Row> : formItems
-        }
-      </Form>
-      { footerContent }
+      <div className={cls({[styles.compact]: compact})}>
+        <Form labelCol={{ span: labelColSpan }} wrapperCol={{ span: wrapperColSpan || 24 - labelColSpan }} {...formProps}>
+          {
+            useRow ? <Row gutter={24} {...rowProps}>{formItems}</Row> : formItems
+          }
+        </Form>
+        { footerContent }
+      </div>
     </Spin>
   )
 }
