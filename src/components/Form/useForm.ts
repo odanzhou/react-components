@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useCallback } from 'react'
 import { Form, Col } from 'antd'
 import { WrappedFormUtils } from 'antd/lib/form/Form'
 import { FormProps, GetFieldDecoratorOptions } from 'antd/lib/form/Form'
@@ -43,7 +43,11 @@ const { Item: FormItem } = Form
  * @param {{
  *  form: WrappedFormUtils,
  *  onOk(params: Record<string, any>, form: WrappedFormUtils, e: React.MouseEvent<HTMLElement, MouseEvent>): void,
- *  list: FormItemContent[] | (fromIns: WrappedFormUtils) => FormItemContent[],
+ *  list: FormItemContent[] | (fromIns: WrappedFormUtils, conf: {
+ *    onOk: (values: Record<string, string>, form: WrappedFormUtils, e) => void,
+ *    loading: boolean,
+ *    confirmLoading: boolean,
+ *  }) => FormItemContent[],
  *  formConf?: FormConf,
  *  useRow?: boolean,
  *  rowProps?: RowProps,
@@ -53,22 +57,29 @@ const { Item: FormItem } = Form
  *  trim?: boolean,
  *  disabled?: boolean,
  *  buttonRender?: React.ReactNode | ((params: {
- *    onClick: (values: Record<string, string>, form: WrappedFormUtils, e) => void
+ *    onOk: (values: Record<string, string>, form: WrappedFormUtils, e) => void,
+ *    disabled: boolean,
+ *    loading: boolean,
+ *    confirmLoading: boolean,
  *  }) =>  React.ReactNode),
- *  confirmLoading?: boolean
+ *  confirmLoading?: boolean,
+ *  compact?: boolean
  * }} props
  */
 const useForm = (props) => {
-  const { form, formConf = {}, list, onOk, useRow = DefUseRow, rowProps,
+  const { form, formConf = {}, list, onOk, useRow = DefUseRow, rowProps, compact,
     colProps: colCommonProps, loading = DefLoading, originData, trim = DefTrim, buttonRender,
     disabled = DefDisabled, confirmLoading = DefLoading
   } = props
   const { labelColSpan = DefLabelColSpan, wrapperColSpan, form: formProps } = formConf
   const formRef = useNewRef(form)
   const { getFieldDecorator } = form
+  const onOkHandle = useCallback((...args) => {
+    return onOkClickRef.current?.(...args)
+  }, [])
   const genFormList = useMemo(() => {
-    return (typeof list === 'function' ? list(formRef.current) : list) || []
-  }, [list, formRef])
+    return (typeof list === 'function' ? list(formRef.current, { onOk: onOkHandle, loading, confirmLoading }) : list) || []
+  }, [list, formRef, onOkHandle, loading, confirmLoading])
   // 处理语言选择
   const { list: allList, dataFormat } = useLangForm(genFormList, { form, labelColSpan, originData, trim })
   const formList = useMemo(() => {
@@ -90,6 +101,7 @@ const useForm = (props) => {
     }).filter(item => item.show !== false)
   }, [allList, formRef])
   const { onOkClick } = useFormClick(form, { trim, onOk, dataFormat })
+  const onOkClickRef = useNewRef(onOkClick)
 
   const formItems = useMemo(() => {
     return formList.map((item) => {
@@ -140,6 +152,7 @@ const useForm = (props) => {
       formProps,
       labelColSpan,
       wrapperColSpan,
+      compact,
     },
     onOkClick,
     confirmLoading,
