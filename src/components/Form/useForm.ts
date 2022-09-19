@@ -100,7 +100,7 @@ const useForm = (props) => {
       }
     }).filter(item => item.show !== false)
   }, [allList, formRef])
-  const { onOkClick } = useFormClick(form, { trim, onOk, dataFormat })
+  const { onOkClick, onValidateClick } = useFormClick(form, { trim, onOk, dataFormat })
   const onOkClickRef = useNewRef(onOkClick)
 
   const formItems = useMemo(() => {
@@ -155,6 +155,7 @@ const useForm = (props) => {
       compact,
     },
     onOkClick,
+    onValidateClick,
     confirmLoading,
   }
 }
