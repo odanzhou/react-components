@@ -16,10 +16,14 @@ const useFormClick = (form, conf) => {
   const { validateFields } = form
   const onOkClick = useCallback((e) => {
     validateFields((errors, data) => {
-      console.log('data', data)
+      if(!_IS_PRODUCT_) {
+        console.log('data', data)
+      }
       if (errors) return
       let values = typeof dataFormat === 'function' ? dataFormat(data) : data
-      console.log('values', values)
+      if(!_IS_PRODUCT_) {
+        console.log('values', values)
+      }
       if (trim && (values != null && typeof values === 'object')) {
         let val
         values = Object.keys(values).reduce((res, key) => {
@@ -35,8 +39,19 @@ const useFormClick = (form, conf) => {
     })
   }, [validateFields, onOk, trim, dataFormat])
 
+  /**
+   * 先交验，校验成功再触发对应的函数（二次确认框）
+   */
+  const onValidateClick = useCallback((e, cb) => {
+    validateFields((errors) => {
+      if (errors) return
+      cb?.(e)
+    })
+  }, [validateFields])
+
   return {
-    onOkClick
+    onOkClick,
+    onValidateClick
   }
 }
 
