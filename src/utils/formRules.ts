@@ -1,4 +1,5 @@
 import { WrappedFormUtils } from 'antd/lib/form/Form'
+import moment from 'moment'
 import { getLangTextId } from 'src/KComponents/KForm/constants'
 import { valIsEmpty } from './utils'
 
@@ -81,4 +82,36 @@ const requiredOneErrorHandle = (value, relyVal, msg) => {
  */
 export const requiredOneRules = (form, field, conf) => {
   return relyRulesHandle(form, field, conf, requiredOneErrorHandle)
+}
+
+/**
+ * 未来时间校验
+ */
+export const futureDate = {
+  validator: async (rule, value) => {
+    const current = moment().valueOf();
+    if (value && value.valueOf){
+      if (value.valueOf() <= current) {
+        throw new Error('必须大于当前时间')
+      }
+    }
+  }
+}
+
+const endDateErrorHandle = (value, relyVal, msg) => {
+  if(!valIsEmptyOrFalse(value) && !valIsEmptyOrFalse(relyVal) ) {
+    if(value.valueOf() <= relyVal.valueOf()) {
+      throw new Error(msg || `必须大于开始时间`);
+    }
+  }
+}
+
+/**
+ * 结束时间大于开始时间
+ * @param {Parameters<relyRulesHandle>[0]} form 
+ * @param {Parameters<relyRulesHandle>[1]} field 
+ * @param {Parameters<relyRulesHandle>[2]} [conf]
+ */
+export const endDateRules = (form, field, conf) => {
+  return relyRulesHandle(form, field, conf, endDateErrorHandle)
 }
