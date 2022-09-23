@@ -16,7 +16,7 @@ const getParamsId = data => ({ id: data?.id })
  * } & Omit<Parameters<ConfirmButton>[0], 'loading' | 'onOk'>} props
  */
 const ItemConfirm = (props) => {
-  const { data, onOk, fetchApi, getParams = getParamsId, ...others } = props
+  const { data, onOk, fetchApi, getParams = getParamsId, params: paramsProps, ...others } = props
   const params = useMemo(() => {
     return typeof getParams === 'function' ? getParams(data) : data
   }, [data, getParams])
@@ -28,10 +28,10 @@ const ItemConfirm = (props) => {
   }})
 
   const onOkClick = useCallback(() => {
-    return onFetch(params)
-  }, [params])
+    return onFetch({...params, ...paramsProps})
+  }, [params, paramsProps])
 
-  return <ConfirmButton {...others} loading={loading} onOk={onOkClick} type="link" />
+  return <ConfirmButton onOk={onOkClick} type="link" {...others} loading={loading} />
 }
 
 export default memo(ItemConfirm)
