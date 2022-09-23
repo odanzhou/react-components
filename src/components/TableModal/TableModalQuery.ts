@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, memo } from 'react'
 import { DataQuery, DataQueryKey } from '../Query'
 import TableModal from './TableModal'
 
@@ -31,4 +31,4 @@ const TableModalQuery = (props) => {
   </DataQuery>
 }
 
-export default TableModalQuery
+export default memo(TableModalQuery)
