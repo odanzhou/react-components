@@ -127,8 +127,8 @@ const equalMsg = (isEqual) => isEqual ? '等于' : ''
  */
 export const numValidator = ({ min, minEqual = false, minMsg, max, maxEqual = false, maxMsg, errorMsg }) => ({
   validator: async (rule, value) => {
+    if(valIsEmpty(value) || (valIsEmpty(min) && valIsEmpty(max))) return
     const val = Number(value)
-    if(valIsEmpty(val) || (valIsEmpty(min) && valIsEmpty(max))) return
     if(Number.isNaN(val)) throw new Error(errorMsg || '请输入正确的数值')
     if(!valIsEmpty(min) && !isUsableNum(min, val, minEqual)) {
       throw new Error(minMsg || `可输入的最小值大于${equalMsg(minEqual)}${min}`)
