@@ -115,3 +115,26 @@ const endDateErrorHandle = (value, relyVal, msg) => {
 export const endDateRules = (form, field, conf) => {
   return relyRulesHandle(form, field, conf, endDateErrorHandle)
 }
+
+const isUsableNum = (val, baseVal, isEqual = false) => {
+  return isEqual ? val <= baseVal : val < baseVal
+}
+
+const equalMsg = (isEqual) => isEqual ? '等于' : ''
+
+/**
+ * 数值最大最小值校验
+ */
+export const numValidator = ({ min, minEqual = false, minMsg, max, maxEqual = false, maxMsg, errorMsg }) => ({
+  validator: async (rule, value) => {
+    const val = Number(value)
+    if(valIsEmpty(val) || (valIsEmpty(min) && valIsEmpty(max))) return
+    if(Number.isNaN(val)) throw new Error(errorMsg || '请输入正确的数值')
+    if(!valIsEmpty(min) && !isUsableNum(min, val, minEqual)) {
+      throw new Error(minMsg || `可输入的最小值大于${equalMsg(minEqual)}${min}`)
+    }
+    if(!valIsEmpty(max) && !isUsableNum(val, max, minEqual)) {
+      throw new Error(maxMsg || `可输入的最大值小于${equalMsg(maxEqual)}${max}`)
+    }
+  }
+})
