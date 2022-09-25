@@ -37,8 +37,8 @@ const useRequest = (fetchApi, conf = {}) => {
   const silenceParamsRef = useRef(initSilenceParams)
   const setSilenceParams = useCallback((paramsObj) => {
     let res = paramsObj
-    if(typeof params === 'function') {
-      res = params(silenceParamsRef.current)
+    if(typeof res === 'function') {
+      res = res(silenceParamsRef.current)
     }
     silenceParamsRef.current = {
       ...silenceParamsRef.current,
