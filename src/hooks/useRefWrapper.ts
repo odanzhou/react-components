@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useCallback } from 'react';
 import { useRef } from 'react';
 
@@ -10,7 +11,7 @@ const useRefWrapper = (initVal, conf) => {
   const { auto = false } = conf || {}
   const valRef = useRef(initVal);
   useMemo(() => {
-    if(auto) {
+    if (auto) {
       valRef.current = initVal;
     }
   }, [initVal, auto])
@@ -18,9 +19,45 @@ const useRefWrapper = (initVal, conf) => {
     return valRef.current
   }, [])
   const setRef = useCallback((val) => valRef.current = val)
+
+  /**
+   * 获取对象的某个属性值
+   */
+  const pickRef = useCallback((key) => {
+    return getRef()?.[key]
+  }, [getRef])
+
+
+  /**
+   * 返回函数，获取对象的某个属性值，当值为函数时执行调用
+   */
+  const pickFnRef = useCallback((key) => {
+    return (...args) => {
+      const val = getRef()?.[key]
+      if (typeof val === 'function') {
+        return val(...args)
+      }
+      return val
+    }
+  }, [getRef])
+
+  /**
+   * 获取引用值，当为函数时，会调用函数
+   */
+  const fnRef = useCallback((...args) => {
+    const val = getRef()
+    if (typeof val === 'function') {
+      return val(...args)
+    }
+    return val
+  }, [getRef])
+
   return {
     getRef,
-    setRef
+    setRef,
+    fnRef,
+    pickRef,
+    pickFnRef,
   }
 };
 
