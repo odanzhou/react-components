@@ -5,10 +5,10 @@ import { useRef } from 'react';
 /**
  * 返回保存最新值的引用
  * @param { T } [initVal]
- * @param {{ auto?: boolean }} [conf]
+ * @param {{ auto?: boolean, fns: string[] | true }} [conf]
  */
 const useRefWrapper = (initVal, conf) => {
-  const { auto = false } = conf || {}
+  const { auto = false, fns } = conf || {}
   const valRef = useRef(initVal);
   useMemo(() => {
     if (auto) {
@@ -52,12 +52,22 @@ const useRefWrapper = (initVal, conf) => {
     return val
   }, [getRef])
 
+  const objWrapper = useMemo(() => {
+    if(Array.isArray(fns)) {
+      return fns.reduce((res, fnName) => {
+        res[fnName] = pickFnRef(fnName)
+        return res
+      }, {})
+    }
+    return {}
+  }, [fns, pickFnRef])
+
   return {
     getRef,
     setRef,
     fnRef,
     pickRef,
-    pickFnRef,
+    objWrapper,
   }
 };
 
