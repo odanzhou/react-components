@@ -1,13 +1,15 @@
-import React, { useMemo, useCallback } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import { Form, Col } from 'antd'
 import { WrappedFormUtils } from 'antd/lib/form/Form'
 import { FormProps, GetFieldDecoratorOptions } from 'antd/lib/form/Form'
 import { FormItemProps } from 'antd/lib/form/FormItem'
-import { useNewRef } from 'src/hooks'
+import { useNewRef, useRefWrapper } from 'hooks'
 import useFormClick from './useFormClick'
 import useLangForm from './useLangForm'
 import { DefLabelColSpan, DefLoading, DefUseRow, DefTrim, DefDisabled } from './constants'
 import { ColProps } from 'antd/lib/col'
+import { valIsEmpty } from 'src/utils/utils'
+import { LangOriginUsedId } from './constants'
 
 const { Item: FormItem } = Form
 
@@ -35,6 +37,7 @@ const { Item: FormItem } = Form
  *  langConf?: Omit<FormItemContent, 'useLang' | 'langRequired' | 'langConf'>,
  *  childProps?: Record<string, any>, [子节点的属性]
  *  getChangeVal?: (e) => string,
+ *  newRow?: boolean, [用一个新的Row, useRow 为true才行]
  * } & FormItemProps} FormItemContent template 和 content 二选一, useLang 时会讲required转化为langRequired:true(如果未设置langRequired)
  */
 
@@ -47,6 +50,7 @@ const { Item: FormItem } = Form
  *    onOk: (values: Record<string, string>, form: WrappedFormUtils, e) => void,
  *    loading: boolean,
  *    confirmLoading: boolean,
+ *    onHideChange: (ids: string[] | string, hide?: boolean) => void
  *  }) => FormItemContent[],
  *  formConf?: FormConf,
  *  useRow?: boolean,
@@ -63,63 +67,97 @@ const { Item: FormItem } = Form
  *    confirmLoading: boolean,
  *  }) =>  React.ReactNode),
  *  confirmLoading?: boolean,
- *  compact?: boolean
+ *  compact?: boolean,
+ *  disabledNoRules?: boolean,
+ *  initHideIds?: string[],
  * }} props
  */
 const useForm = (props) => {
-  const { form, formConf = {}, list, onOk, useRow = DefUseRow, rowProps, compact,
-    colProps: colCommonProps, loading = DefLoading, originData, trim = DefTrim, buttonRender,
+  const { form, formConf = {}, list, onOk, useRow = DefUseRow, rowProps, compact, disabledNoRules = true,
+    colProps: colCommonProps, loading = DefLoading, originData, trim = DefTrim, buttonRender, initHideIds,
     disabled = DefDisabled, confirmLoading = DefLoading
   } = props
   const { labelColSpan = DefLabelColSpan, wrapperColSpan, form: formProps } = formConf
   const formRef = useNewRef(form)
   const { getFieldDecorator } = form
-  const onOkHandle = useCallback((...args) => {
-    return onOkClickRef.current?.(...args)
+  const conf = useMemo(() => ({ fns: ['onOkClick', 'getFormParams', 'onValidateClick'] }))
+  const { setRefVal, objWrapper } = useRefWrapper(undefined, conf)
+  const [hideItems, setHideItems] = useState(() => Array.isArray(initHideIds) ? initHideIds : []);
+  const onHideChange = useCallback((ids, hide) => {
+    if(valIsEmpty(ids)) return
+    if(typeof ids === 'string') ids = [ids]
+    if(!Array.isArray(ids)) return
+    setHideItems(list => {
+      // 添加隐藏
+      if(hide) {
+        return [...new Set([...list,...ids])]
+      }
+      // 清除隐藏
+      return list.filter(id => !ids.includes(id))
+    })
   }, [])
   const genFormList = useMemo(() => {
-    return (typeof list === 'function' ? list(formRef.current, { onOk: onOkHandle, loading, confirmLoading }) : list) || []
-  }, [list, formRef, onOkHandle, loading, confirmLoading])
+    const { onOkClick: onOk, ...otherMethods } = objWrapper
+    return (typeof list === 'function' ? list(formRef.current, { onOk, ...otherMethods, loading, confirmLoading, onHideChange }) : list) || []
+  }, [list, formRef, loading, confirmLoading, objWrapper, onHideChange])
   // 处理语言选择
   const { list: allList, dataFormat } = useLangForm(genFormList, { form, labelColSpan, originData, trim })
   const formList = useMemo(() => {
     return allList.map(item => {
-      const { options, required, label,  } = item
-      let fileOptions = options
+      const { options, required, label } = item
+      const rulesHandle = options?.rules
+      let rules = (typeof rulesHandle === 'function' ? rulesHandle({ data: item, disabled }) : rulesHandle) || []
+      rules = Array.isArray(rules) ? rules : []
       if (required) {
-        let rules = [...(fileOptions && fileOptions.rules || [])]
         rules.unshift({ required: true, message: label ? `请输入${label}` : undefined })
-        fileOptions = {
-          ...fileOptions,
-          rules
-        }
       }
       return {
         ...item,
-        options: fileOptions
+        options: {
+          ...options,
+          rules
+        }
       }
-    }).filter(item => item.show !== false)
-  }, [allList, formRef])
-  const { onOkClick, onValidateClick } = useFormClick(form, { trim, onOk, dataFormat })
-  const onOkClickRef = useNewRef(onOkClick)
+    }).filter(item => item.show !== false && !hideItems.includes(item[LangOriginUsedId] ||item.id))
+  }, [allList, formRef, hideItems])
+  const formClickMethod = useFormClick(form, { trim, onOk, dataFormat })
+  useMemo(() => {
+    setRefVal(formClickMethod)
+  }, [formClickMethod])
 
-  const formItems = useMemo(() => {
-    return formList.map((item) => {
-      let { id, content, template, options, colProps, childProps, ...others } = item
+  const [formItems, rowIndexList] = useMemo(() => {
+    const list = []
+    const arr = formList.map((item, index) => {
+      let { id, content, template, options, colProps, childProps, labelColSpan, extraProps, newRow, ...others } = item
+      if(useRow && newRow) {
+        list.push(index)
+      }
       const initValue = originData || {}
       let itemOptions = options
       if (id in initValue) {
         itemOptions = {
+          ...options,
           initialValue: initValue[id],
-          ...options
         }
       }
       const itemChildProps = { disabled, ...childProps}
+      if(disabledNoRules && itemChildProps.disabled && itemOptions) {
+        itemOptions = { ...itemOptions }
+        delete itemOptions.rules
+      }
+      let colObj = {}
+      if(labelColSpan || labelColSpan === 0) {
+        colObj = {
+          labelCol: { span: labelColSpan },
+          wrapperCol: { span: 24 - labelColSpan },
+        }
+      }
+
       const formItemContent = (
-        <FormItem key={id} {...others}>
+        <FormItem key={id} {...colObj} {...others}>
           {
-            template ? React.cloneElement((typeof template === 'function' ? template(item, { form, list: formList }) : template), itemChildProps) :
-              getFieldDecorator(id, itemOptions)(React.cloneElement(typeof content === 'function' ? content(item, { form, list: formList }) : content, itemChildProps))
+            template ? React.cloneElement((typeof template === 'function' ? template(item, { form, list: formList, extraProps, disabled }) : template), itemChildProps) :
+              getFieldDecorator(id, itemOptions)(React.cloneElement(typeof content === 'function' ? content(item, { form, list: formList, extraProps, disabled }) : content, itemChildProps))
           }
         </FormItem>
       )
@@ -128,12 +166,15 @@ const useForm = (props) => {
       }
       return formItemContent
     })
-  }, [formList, form, useRow, colCommonProps, getFieldDecorator, originData, disabled])
+    return [arr, list]
+  }, [formList, form, useRow, colCommonProps, getFieldDecorator, originData, disabled, disabledNoRules])
 
   const footerContent = useMemo(() => {
+    const { onOkClick: onOk, ...otherMethods } = objWrapper
     if(typeof buttonRender === 'function') {
       return buttonRender({
-        onOk: onOkClick,
+        onOk,
+        ...otherMethods,
         form,
         disabled,
         loading,
@@ -141,7 +182,8 @@ const useForm = (props) => {
       })
     }
     return buttonRender
-  },[buttonRender, onOkClick, form, disabled, loading, confirmLoading])
+  },[buttonRender, objWrapper, form, disabled, loading, confirmLoading])
+
   return {
     formListProps: {
       useRow,
@@ -149,13 +191,13 @@ const useForm = (props) => {
       loading,
       footerContent,
       formItems,
+      rowIndexList,
       formProps,
       labelColSpan,
       wrapperColSpan,
       compact,
     },
-    onOkClick,
-    onValidateClick,
+    ...formClickMethod,
     confirmLoading,
   }
 }
