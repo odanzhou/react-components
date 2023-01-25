@@ -1,7 +1,6 @@
 import React, { useRef, useMemo, useCallback } from 'react';
 import { Button, Icon } from 'antd';
 import { _t } from 'utils/i18n';
-import clsx from 'classnames';
 import style from './style.less'
 
 /**
@@ -15,17 +14,16 @@ import style from './style.less'
  *  disabled?: boolean,
  *  multiple?: boolean,
  *  accept?: string,
- * }} props 模版文件是指放在前端的文件，其他需要后端接口的下载请使用 DownFile
+ *  className?: string,
+ * }} props
  */
 const FileInput = (props) => {
-  const { tempUrl, tempDownName, tempBtnName = '下载模板', btnName = '上传ID文件', ellipsisName = false,
-    disabled, loading = false, value, onChange, multiple = false, accept = '.xlsx,.csv', children,
-    prefixContent, className, downClassName='ml-10'
-  } = props
+  const { tempUrl, tempDownName, tempBtnName = '下载模板', btnName = '上传ID文件', className = '',
+    disabled, loading = false, value, onChange, multiple = false, accept = '.xlsx,.csv' } = props
   const fileRef = useRef()
   const tempDownloadName = useMemo(() => {
     let type = String(tempUrl).split('.').pop() || ''
-    if (type) {
+    if(type) {
       type = `.${type}`
     }
     if (tempDownName) {
@@ -57,7 +55,7 @@ const FileInput = (props) => {
     }).filter(item => !!item)
   }, [value])
 
-  const onFileChange = useCallback((list = []) => {
+  const onFileChange = useCallback((list=[]) => {
     onChange(multiple ? list : list[list.length - 1])
   }, [multiple])
 
@@ -76,7 +74,7 @@ const FileInput = (props) => {
   }, [])
 
   const onDel = useCallback((i) => {
-    if (disabled) return
+    if(disabled) return
     const res = [...fileList]
     res.splice(i, 1)
     onFileChange?.(res)
@@ -84,37 +82,29 @@ const FileInput = (props) => {
 
   return (
     <div className={className}>
-      { !!prefixContent && prefixContent}
-      {btnName && <>
-        <input
-          ref={fileRef} type="file" hidden
-          accept={accept}
-          multiple={multiple}
-          onChange={e => uploadFileChange(e)}
-        />
-        <Button loading={loading} onClick={uploadFileClick} disabled={disabled}>{btnName}</Button>
-      </>}
-      {!!children && <span>{children}</span>}
+      <input
+        ref={fileRef} type="file" hidden
+        accept={accept}
+        multiple={multiple}
+        onChange={e => uploadFileChange(e)}
+      />
+      <Button loading={loading} onClick={uploadFileClick} disabled={disabled}>{btnName}</Button>
       {!!tempUrl && <a
-        className={downClassName}
+        className='ml-10'
         href={tempUrl}
         download={tempDownloadName}
       >
         {tempBtnName}
       </a>
       }
-      {btnName && <div className={style.file_wrap}>
-        {fileList.map((file, index) => {
-          const name = file ? file.name : ''
-          return (
-            <div className={style.file_item}>
-              <span title={name} className={clsx({ [style.ellipsis]: ellipsisName })}>{name}</span>
-              <Icon title={_t('admin.common.delete')} type="delete" className="cursor" onClick={() => onDel(index)} />
-            </div>
-          )
-        })}
+      <div className={style.file_wrap}>
+        {fileList.map((file, index) => (
+          <div className={style.file_item}>
+            <span>{file ? file.name : ''}</span>
+            <Icon title={_t('admin.common.delete')} type="delete" className="cursor" onClick={() => onDel(index)}/>
+          </div>
+        ))}
       </div>
-      }
     </div>
   );
 };
