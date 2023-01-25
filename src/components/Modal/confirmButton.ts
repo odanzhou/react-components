@@ -7,16 +7,20 @@ import { _t } from 'utils/i18n';
  * 二次确认弹窗，支持先校验，校验通过后再出现二次弹窗
  * @param {{
  *  onOk(...args: any[]): void,
- *  onValidate?: (cb: Function) => void,
+ *  onValidate?: (e) => any,
  *  operName?: string,
  *  title?: string,
  *  inModal?: boolean,
  *  loading?: boolean,
  *  type?: string,
- * }} props
+ *  content?: React.ReactNode,
+ * }} props onValidate 通过返回false或错误来阻止后续执行（支持promise）
  */
 const ConfirmButton = (props) => {
-  const { onOk, onValidate, operName =_t('admin.common.delete'), inModal = true, loading = false, type='primary' } = props
+  const {
+    onOk, onValidate, operName =_t('admin.common.delete'), inModal = true, loading = false,
+    type='primary', content = '该操作不可恢复，请谨慎操作！', ...others
+  } = props
   let { title } = props
   if(title === undefined) {
     title = _t('admin.common.confirm')
@@ -26,7 +30,7 @@ const ConfirmButton = (props) => {
     const fn = () => {
       const modal = Modal.confirm({
         title: `${title}`,
-        content: '该操作不可恢复，请谨慎操作！',
+        content: content,
         onOk(...args) {
           modal.destroy()
           return onOk(...args)
@@ -34,17 +38,25 @@ const ConfirmButton = (props) => {
       })
     };
     if(onValidate) {
-      onValidate(e, fn)
+      Promise.resolve(onValidate?.(e)).then((isPass) => {
+        if(isPass !== false) {
+          fn?.(e)
+        }
+      }).catch(() => {})
     } else {
       fn()
     }
-  }, [title, onOk, onValidate])
+  }, [title, onOk, onValidate, content])
   const hasValidateFn = typeof onValidate === 'function'
   const [visible, setVisible] = useState(false);
   const onClick = (e) => {
-    onValidate(e, () => setVisible(true))
+    Promise.resolve(onValidate?.(e)).then((isPass) => {
+      if(isPass !== false) {
+        setVisible(true)
+      }
+    }).catch(() => {})
   }
-  const btnContent = <Button type={type} loading={loading} onClick={inModal ? onConfirm : hasValidateFn ? onClick : undefined}>{operName}</Button>
+  const btnContent = <Button {...others} type={type} loading={loading} onClick={inModal ? onConfirm : hasValidateFn ? onClick : undefined}>{operName}</Button>
   if(inModal) {
     return btnContent
   }
