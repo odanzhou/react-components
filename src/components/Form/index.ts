@@ -3,6 +3,7 @@ import { Form } from 'antd'
 import useForm from './useForm'
 import useFormState from './useFormState'
 import FormList from './formList'
+import useRepeatFormItem, { useRepeatFormItemClick, RepeatIndex } from './useRepeatFormItem'
 
 /**
  * KFormType
@@ -29,6 +30,7 @@ export {
   useForm,
   useFormState,
   KFormKey,
+  useRepeatFormItem,
+  useRepeatFormItemClick,
+  RepeatIndex,
 }
-
-export default KFormWithForm
