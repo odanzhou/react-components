@@ -109,7 +109,7 @@ const useForm = (props) => {
       let rules = (typeof rulesHandle === 'function' ? rulesHandle({ data: item, disabled }) : rulesHandle) || []
       rules = Array.isArray(rules) ? rules : []
       if (required) {
-        rules.unshift({ required: true, message: label ? `请输入${label}` : undefined })
+        rules = [{ required: true, message: label ? `请输入${label}` : undefined }, ...rules]
       }
       return {
         ...item,
