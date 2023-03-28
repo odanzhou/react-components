@@ -130,6 +130,7 @@ const useCountDown = (remainTime, conf) => {
     progress: progressRate, // 0 - 1 进度比率
     noStarted: remainTime <= 0 && !isEnd, // 剩余时间为0且未结束，表示未启动
     isActive: remainTime > 0, // 活动中
+    onRefresh: resetData, // 刷新重新获取数据
   };
 };
 
