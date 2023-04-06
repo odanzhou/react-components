@@ -23,16 +23,18 @@ const visibilityChangeEvent = hiddenProperty.replace(
  * @param {number | string} remainTime
  * @param {{
  *  totalTime?: number | string,
- *  isEnd?: boolean;
+ *  isEnd?: boolean,
+ *  actionType?: string,
  *  onFinish?: Function | null,
  *  poll?: number,
- *  actionType?: string,
- * }} conf totalTime: 用来计算进度条; isEnd: 是否已结束
+ *  onRest?; Function | null,
+ *  maxDiffTime?: Numer,
+ * }} conf totalTime: 用来计算进度条; isEnd: 是否已结束; onRest: 用于重新获取数据;
  */
 const useCountDown = (remainTime, conf) => {
   const {
     onFinish: onFinishProp, totalTime = remainTime, pathTime = 150, poll = 10,
-    isEnd: isEndOrigin = false, actionType
+    isEnd: isEndOrigin = false, actionType, onRest, maxDiffTime = 2 * 1000
   } = conf || {};
   const dispatch = useDispatch();
   const remainTimeVal = Number(remainTime);
@@ -50,13 +52,17 @@ const useCountDown = (remainTime, conf) => {
 
   // 重新获取数据
   const resetData = useCallback(() => {
-    if (timerRef.current == null || !actionType) return;
-    dispatch({ type: actionType });
-  }, [dispatch, actionType]);
+    if (timerRef.current == null) return;
+    if(typeof onRest === 'function') {
+      onRest()
+    } else if(actionType) {
+      dispatch({ type: actionType });
+    }
+  }, [dispatch, onRest, actionType]);
 
   const onFinish = useCallback((...args) => {
     if (typeof onFinishProp === 'function') {
-      onFinishProp(...args);
+      onFinishProp(resetData, args);
     } else if (typeof onFinishProp === 'undefined') {
       resetData();
     }
@@ -84,6 +90,7 @@ const useCountDown = (remainTime, conf) => {
       timerRef.current = null;
       return;
     }
+    let timeStart = Date.now()
     const pollTime = Math.floor(1000 / poll);
     timerRef.current = setInterval(() => {
       countDownTime -= pollTime;
@@ -98,12 +105,19 @@ const useCountDown = (remainTime, conf) => {
         timerRef.current = null;
         setProgressRate(1);
       }
+      // 本地时间的差异 与 setInterval 执行后变更的时间差异大雨设定的时间（默认2秒）
+      if(maxDiffTime && (Date.now() - timeStart) - (remainTimeVal - countDownTime) >= maxDiffTime ) {
+        // 重置差异
+        timeStart += maxDiffTime
+        // 重新请求数据
+        resetData()
+      }
     }, pollTime);
     return () => {
       clearInterval(timerRef.current);
       timerRef.current = null;
     };
-  }, [remainTimeVal, getTime, onFinish, poll, totalTime, isEndOrigin]);
+  }, [remainTimeVal, getTime, onFinish, poll, totalTime, isEndOrigin, maxDiffTime, resetData]);
 
   // 处理页面隐藏显示后的逻辑
   useEffect(() => {
@@ -130,7 +144,7 @@ const useCountDown = (remainTime, conf) => {
     progress: progressRate, // 0 - 1 进度比率
     noStarted: remainTime <= 0 && !isEnd, // 剩余时间为0且未结束，表示未启动
     isActive: remainTime > 0, // 活动中
-    onRefresh: resetData, // 刷新重新获取数据
+    onRefresh: resetData, // 重新获取数据
   };
 };
 
