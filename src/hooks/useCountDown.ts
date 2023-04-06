@@ -27,8 +27,8 @@ const visibilityChangeEvent = hiddenProperty.replace(
  *  actionType?: string,
  *  onFinish?: Function | null,
  *  poll?: number,
- *  onRest?; Function | null,
- *  maxDiffTime?: Numer,
+ *  onRest?: Function | null,
+ *  maxDiffTime?: nubmer,
  * }} conf totalTime: 用来计算进度条; isEnd: 是否已结束; onRest: 用于重新获取数据;
  */
 const useCountDown = (remainTime, conf) => {
