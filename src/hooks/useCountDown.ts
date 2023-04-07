@@ -53,8 +53,8 @@ const useCountDown = (remainTime, conf) => {
   // 重新获取数据
   const resetData = useCallback(() => {
     if (timerRef.current == null) return;
-    if(typeof onRest === 'function') {
-      onRest()
+    if (typeof onRest === 'function') {
+      onRest();
     } else if(actionType) {
       dispatch({ type: actionType });
     }
@@ -69,10 +69,11 @@ const useCountDown = (remainTime, conf) => {
   }, [onFinishProp, resetData]);
 
   const [times, setTimes] = useState(() => getTime(remainTimeVal));
+  const getProgressRate = useCallback((timesVal) => {
+    return isEndOrigin || (remainTime > 0 && countDownIsEnd(timesVal)) ? 1 : 0;
+  }, [isEndOrigin, remainTime]);
   // 已结束进度条 1
-  const [progressRate, setProgressRate] = useState(() => {
-    return isEndOrigin || (remainTime > 0 && countDownIsEnd(times)) ? 1 : 0;
-  });
+  const [progressRate, setProgressRate] = useState(() => getProgressRate(times));
 
 
   const countDown = useMemo(() => {
@@ -83,6 +84,13 @@ const useCountDown = (remainTime, conf) => {
   const timesRef = useRef(times);
   timesRef.current = times;
 
+  // 重置数据
+  useEffect(() => {
+    const timesVal = getTime(remainTimeVal);
+    setTimes(timesVal);
+    setProgressRate(getProgressRate(timesVal));
+  }, [remainTimeVal, getTime, getProgressRate]);
+
   useEffect(() => {
     let countDownTime = remainTimeVal;
     if (isEndOrigin || countDownTime <= 0) {
@@ -90,7 +98,7 @@ const useCountDown = (remainTime, conf) => {
       timerRef.current = null;
       return;
     }
-    let timeStart = Date.now()
+    let timeStart = Date.now();
     const pollTime = Math.floor(1000 / poll);
     timerRef.current = setInterval(() => {
       countDownTime -= pollTime;
@@ -105,12 +113,14 @@ const useCountDown = (remainTime, conf) => {
         timerRef.current = null;
         setProgressRate(1);
       }
-      // 本地时间的差异 与 setInterval 执行后变更的时间差异大雨设定的时间（默认2秒）
-      if(maxDiffTime && (Date.now() - timeStart) - (remainTimeVal - countDownTime) >= maxDiffTime ) {
+      // 本地时间的差异与 setInterval 执行后变更的时间差异大雨设定的时间（默认2秒）
+      if (maxDiffTime &&
+        (Date.now() - timeStart) - (remainTimeVal - countDownTime) >= maxDiffTime
+      ) {
         // 重置差异
-        timeStart += maxDiffTime
+        timeStart += maxDiffTime;
         // 重新请求数据
-        resetData()
+        resetData();
       }
     }, pollTime);
     return () => {
