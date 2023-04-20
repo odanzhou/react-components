@@ -24,18 +24,19 @@ const visibilityChangeEvent = hiddenProperty.replace(
  * @param {{
  *  totalTime?: number | string,
  *  isEnd?: boolean,
- *  actionType?: string,
  *  onFinish?: Function | null,
  *  poll?: number,
  *  onRest?: Function | null,
- *  maxDiffTime?: nubmer,
- * }} conf totalTime: 用来计算进度条; isEnd: 是否已结束; onRest: 用于重新获取数据;
+ *  maxDiffTime?: number,
+ *  actionType?: string,
+ * }} [conf] totalTime: 用来计算进度条; isEnd: 是否已结束; onRest: 用于重新获取数据;
  */
 const useCountDown = (remainTime, conf) => {
   const {
-    onFinish: onFinishProp, totalTime = remainTime, pathTime = 150, poll = 10,
-    isEnd: isEndOrigin = false, actionType, onRest, maxDiffTime = 2 * 1000
+    onFinish: onFinishProp, totalTime: totalTimeProp = remainTime, pathTime = 150, poll = 10,
+    isEnd: isEndOrigin = false, onRest, maxDiffTime = 2 * 1000, actionType
   } = conf || {};
+  const totalTime = Math.max(totalTimeProp, remainTime);
   const dispatch = useDispatch();
   const remainTimeVal = Number(remainTime);
   const getTime = useCallback((maxTime) => {
@@ -55,7 +56,7 @@ const useCountDown = (remainTime, conf) => {
     if (timerRef.current == null) return;
     if (typeof onRest === 'function') {
       onRest();
-    } else if(actionType) {
+    } else if(actionType){
       dispatch({ type: actionType });
     }
   }, [dispatch, onRest, actionType]);
@@ -74,7 +75,6 @@ const useCountDown = (remainTime, conf) => {
   }, [isEndOrigin, remainTime]);
   // 已结束进度条 1
   const [progressRate, setProgressRate] = useState(() => getProgressRate(times));
-
 
   const countDown = useMemo(() => {
     return { h: times[0], m: times[1], s: times[2] };
