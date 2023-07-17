@@ -19,7 +19,7 @@ const useFormClick = (form, conf) => {
   const groupHandle = useMemo(() => {
     let hasGroup = false
     const groupHash = {}
-    formList.forEach(({id, group}) => {
+    formList?.forEach(({id, group}) => {
       if(id && group) {
         hasGroup = true
         groupHash[id] = group
@@ -27,8 +27,8 @@ const useFormClick = (form, conf) => {
     })
     return (values) => {
       if(hasGroup && values && typeof values === 'object') {
-        return Object.keys(values).reduce((res, key) => {
-          val = values[key]
+        values = Object.keys(values).reduce((res, key) => {
+          const val = values[key]
           const groupKey = groupHash[key]
           if (groupKey) {
             if(!res[groupKey]) {
@@ -40,6 +40,9 @@ const useFormClick = (form, conf) => {
           }
           return res
         }, {})
+      }
+      if(!_IS_PRODUCT_ && hasGroup) {
+        console.log('Group Data: ', values)
       }
       return values
     }
