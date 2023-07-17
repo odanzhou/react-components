@@ -70,14 +70,22 @@ const { Item: FormItem } = Form
  *  compact?: boolean,
  *  disabledNoRules?: boolean,
  *  initHideIds?: string[],
+ *  onOkProxy?: Function,
  * }} props
  */
 const useForm = (props) => {
-  const { form, formConf = {}, list, onOk, useRow = DefUseRow, rowProps, compact, disabledNoRules = true,
+  const { form, formConf = {}, list, onOk: onOkOrigin, useRow = DefUseRow, rowProps, compact, disabledNoRules = true,
     colProps: colCommonProps, loading = DefLoading, originData, trim = DefTrim, buttonRender, initHideIds,
-    disabled = DefDisabled, confirmLoading = DefLoading
+    disabled = DefDisabled, confirmLoading = DefLoading, onOkProxy
   } = props
   const { labelColSpan = DefLabelColSpan, wrapperColSpan, form: formProps } = formConf
+  const onOk = useCallback((...args) => {
+    if(typeof onOkProxy === 'function') {
+      const res = onOkProxy(...args)
+      return onOkOrigin(...(Array.isArray(res) ? res : args))
+    }
+    return onOkOrigin(...args)
+  }, [onOkOrigin, onOkProxy])
   const formRef = useNewRef(form)
   const { getFieldDecorator } = form
   const conf = useMemo(() => ({ fns: ['onOkClick', 'getFormParams', 'onValidateClick'] }))
@@ -109,7 +117,10 @@ const useForm = (props) => {
       let rules = (typeof rulesHandle === 'function' ? rulesHandle({ data: item, disabled }) : rulesHandle) || []
       rules = Array.isArray(rules) ? rules : []
       if (required) {
-        rules = [{ required: true, message: label ? `请输入${label}` : undefined }, ...rules]
+        rules = [
+          { required: true, message: label ? `请输入${label}` : undefined },
+          ...rules
+        ]
       }
       return {
         ...item,
@@ -120,7 +131,7 @@ const useForm = (props) => {
       }
     }).filter(item => item.show !== false && !hideItems.includes(item[LangOriginUsedId] ||item.id))
   }, [allList, formRef, hideItems])
-  const formClickMethod = useFormClick(form, { trim, onOk, dataFormat })
+  const formClickMethod = useFormClick(form, { trim, onOk, dataFormat, formList })
   useMemo(() => {
     setRefVal(formClickMethod)
   }, [formClickMethod])
