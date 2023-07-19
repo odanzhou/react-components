@@ -15,15 +15,18 @@ import style from './style.less'
  *  multiple?: boolean,
  *  accept?: string,
  *  className?: string,
- * }} props
+ *  uploadFetch?: string,
+ * }} props 模版文件是指放在前端的文件，其他需要后端接口的下载请使用 DownFile
  */
 const FileInput = (props) => {
-  const { tempUrl, tempDownName, tempBtnName = '下载模板', btnName = '上传ID文件', className = '',
-    disabled, loading = false, value, onChange, multiple = false, accept = '.xlsx,.csv' } = props
+  const { tempUrl, tempDownName, tempBtnName = '下载模板', btnName = '上传ID文件', ellipsisName = false,
+    disabled, loading: loadingProp = false, value, onChange, multiple = false, accept = '.xlsx,.csv', children,
+    prefixContent, className='', downClassName='ml-10', uploadFetch,
+  } = props
   const fileRef = useRef()
   const tempDownloadName = useMemo(() => {
     let type = String(tempUrl).split('.').pop() || ''
-    if(type) {
+    if (type) {
       type = `.${type}`
     }
     if (tempDownName) {
@@ -35,6 +38,14 @@ const FileInput = (props) => {
       return name || `templateFile${type}`
     }
   }, [tempUrl, tempDownName])
+
+  const hasFetch = !!uploadFetch
+  // （编辑前）获取数据
+  const { onFetch: onUploadFetch, loading: uploadLoading } = useRequest(getTradeConfInfo, {
+    manual: true
+  })
+
+  const loading = loadingProp || uploadLoading
 
   const fileList = useMemo(() => {
     let list
@@ -55,11 +66,11 @@ const FileInput = (props) => {
     }).filter(item => !!item)
   }, [value])
 
-  const onFileChange = useCallback((list=[]) => {
+  const onFileChange = useCallback((list = []) => {
     onChange(multiple ? list : list[list.length - 1])
   }, [multiple])
 
-  const uploadFileChange = useCallback((e) => {
+  const uploadFileLocalChange = useCallback((e) => {
     const files = e.currentTarget.files;
     if (files.length === 0) {
       return;
@@ -67,6 +78,23 @@ const FileInput = (props) => {
     const targetFileList = [...fileList, ...files]
     onFileChange(targetFileList)
   }, [onFileChange, multiple, fileList])
+  // 通过接口上传
+  const uploadFileFetchChange = useCallback(async (e) => {
+    const files = e.currentTarget.files;
+    if (files.length === 0) {
+      return;
+    }
+    onUploadFetch({ file: files}).then(res => {
+      let dataList = res.data || []
+      dataList = Array.isArray(dataList) ? dataList : typeof dataList === 'object' ? [dataList] : []
+      const targetFileList = [...fileList, ...dataList]
+      onFileChange(targetFileList)
+    })
+  }, [onFileChange, multiple, fileList, onUploadFetch])
+
+  const uploadFileChange = useCallback((...args) => {
+    return hasFetch ? uploadFileFetchChange(...args) : uploadFileLocalChange(...args)
+  }, [hasFetch, uploadFileLocalChange, uploadFileFetchChange])
 
   const uploadFileClick = useCallback(() => {
     fileRef.current.value = '';
@@ -74,7 +102,7 @@ const FileInput = (props) => {
   }, [])
 
   const onDel = useCallback((i) => {
-    if(disabled) return
+    if (disabled) return
     const res = [...fileList]
     res.splice(i, 1)
     onFileChange?.(res)
@@ -82,29 +110,37 @@ const FileInput = (props) => {
 
   return (
     <div className={className}>
-      <input
-        ref={fileRef} type="file" hidden
-        accept={accept}
-        multiple={multiple}
-        onChange={e => uploadFileChange(e)}
-      />
-      <Button loading={loading} onClick={uploadFileClick} disabled={disabled}>{btnName}</Button>
+      { !!prefixContent && prefixContent}
+      {btnName && <>
+        <input
+          ref={fileRef} type="file" hidden
+          accept={accept}
+          multiple={multiple}
+          onChange={e => uploadFileChange(e)}
+        />
+        <Button loading={loading} onClick={uploadFileClick} disabled={disabled}>{btnName}</Button>
+      </>}
+      {!!children && <span>{children}</span>}
       {!!tempUrl && <a
-        className='ml-10'
+        className={downClassName}
         href={tempUrl}
         download={tempDownloadName}
       >
         {tempBtnName}
       </a>
       }
-      <div className={style.file_wrap}>
-        {fileList.map((file, index) => (
-          <div className={style.file_item}>
-            <span>{file ? file.name : ''}</span>
-            <Icon title={_t('admin.common.delete')} type="delete" className="cursor" onClick={() => onDel(index)}/>
-          </div>
-        ))}
+      {btnName && <div className={style.file_wrap}>
+        {fileList.map((file, index) => {
+          const name = file ? file.name : ''
+          return (
+            <div className={style.file_item}>
+              <span title={name} className={clsx({ [style.ellipsis]: ellipsisName })}>{name}</span>
+              <Icon title={_t('admin.common.delete')} type="delete" className="cursor" onClick={() => onDel(index)} />
+            </div>
+          )
+        })}
       </div>
+      }
     </div>
   );
 };
