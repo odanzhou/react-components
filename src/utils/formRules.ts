@@ -1,8 +1,7 @@
 import { WrappedFormUtils } from 'antd/lib/form/Form'
 import moment from 'moment'
 import { getLangTextId } from 'src/components/Form/constants'
-import { precision2float, isMinStep } from './helper'
-import { valIsEmpty } from './utils'
+import { precision2float, isMinStep, valIsEmpty } from './helper'
 
 /**
  * 判断值是否为空值或者false
