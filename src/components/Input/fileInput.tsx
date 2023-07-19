@@ -41,7 +41,7 @@ const FileInput = (props) => {
 
   const hasFetch = !!uploadFetch
   // （编辑前）获取数据
-  const { onFetch: onUploadFetch, loading: uploadLoading } = useRequest(getTradeConfInfo, {
+  const { onFetch: onUploadFetch, loading: uploadLoading } = useRequest(uploadFetchd, {
     manual: true
   })
 
